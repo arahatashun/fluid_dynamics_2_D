@@ -17,7 +17,6 @@ const NLAST = 5000 # Steps
 const NLP = 10
 
 # set x-grid parameters
-const MDX = 500
 const MX = 401 # grid number of x
 const I1 = 96 # left edge
 const I2 = 106 # right edge
@@ -25,7 +24,6 @@ const DX = 1.0 / (I2 - I1)
 const ICENT = (I1 + I2) / 2
 
 # set y-grid parameters
-const MDY = 300
 const MY = 201 # grid number of y
 const J1 = 96 # top edge
 const J2 = 106 # bottom edge
@@ -218,8 +216,8 @@ end
 
 function slvflw()
     # make Array
-    X = Array{Float64, 2}(MX, MY)
-    Y = Array{Float64, 2}(MX, MY)
+    X = zeros(MX, MY)
+    Y = zeros(MX, MY)
     # initial condition (uniform flow)
     u = ones(MX, MY)
     v = zeros(MX, MY)
@@ -274,7 +272,7 @@ function slvflw()
     end
     fig = figure()
     ax = fig[:add_subplot](111)
-    img = ax[:imshow](v)
+    img = ax[:imshow](u)
     PyPlot.plt[:show]()
 end
 
