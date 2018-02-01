@@ -216,7 +216,7 @@ function veloeq(p, u, v)
     vrhs = zeros(p)
     # pressure gradient
     for i in 3:MX+2, j in 3:MY+2
-        if i<I1 || i>I2 || j<J1 || j>J2
+        if i<I1 || i>I2 || j<J1 || j>J
             urhs[i, j] = - (p[i + 1, j] - p[i - 1, j])/(2DX)
             vrhs[i ,j] = - (p[i, j + 1] - p[i, j - 1])/(2DY)
         end
@@ -253,7 +253,6 @@ function veloeq(p, u, v)
         v[i, J2 - 1] = 2v[i, J2] - v[i, J2 + 1]
     end
     for i in 3:MX+2, j in 3:MY+2
-
         if i<I1-1 || i>I2+1 || j<J1-1 || j>J2+1
             urhs[i, j] -= advection_decrement(i, j, v, u, DY)
             vrhs[i,j] -= advection_decrement(i, j, v, v, DY)
