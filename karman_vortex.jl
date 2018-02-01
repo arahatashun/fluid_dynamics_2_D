@@ -205,8 +205,9 @@ end
 
 
 function advection_decrement(i, j, a, b, D)
-    a[i, j] * ( -b[i + 2, j] + 8(b[i + 1, j] - b[i - 1, j]) + b[i - 2, j]) / (12D)
+    decrement = a[i, j] * ( -b[i + 2, j] + 8 * (b[i + 1, j] - b[i - 1, j]) + b[i - 2, j]) / (12D)
     + abs(a[i, j]) * (b[i + 2, j] - 4b[i + 1, j] + 6b[i, j] - 4b[i - 1, j] + b[i - 2, j]) /(4D)
+    return decrement
 end
 
 # Kawamura scheme
