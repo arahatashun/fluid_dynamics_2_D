@@ -103,30 +103,30 @@ end
 function bcforp(p)
     for j in 1:MY+4
         # inflow condition i = 1
-        p[1, j] = 0.0
+        p[2, j] = 0.0
         # dowmstream condition i = MX
         p[MX + 3, j] = 0.0
     end
     for i in 1:MX+4
         # bottom condition j = 1
-        p[i, 1] = 0.0
+        p[i, 2] = 0.0
         # bottom condition j = MY
         p[i, MY + 3] = 0.0
     end
     # wall condition
     # define four point
-    p[I1, J1] = p[I1 - 1, J1 - 1]
-    p[I1, J2] = p[I1 - 1, J2 + 1]
-    p[I2, J1] = p[I2 + 1, J1 - 1]
-    p[I2, J2] = p[I2 + 1, J2 + 1]
+    p[I1 + 1, J1 + 1] = p[I1, J1]
+    p[I1 + 1, J2 + 1] = p[I1, J2]
+    p[I2 + 1, J1 + 1] = p[I2, J1]
+    p[I2 + 1, J2 + 1] = p[I2, J2]
     # four sides
     for j in J1+2:J2
-        p[I1, j] = p[I1 - 1, j]
-        p[I2, j] = p[I2 + 1, j]
+        p[I1 + 1, j] = p[I1, j]
+        p[I2 + 1, j] = p[I2 + 2, j]
     end
     for i in I1+2:I2
-        p[i, J1] = p[i, J1 - 1]
-        p[i, J2] = p[i, J2 + 1]
+        p[i, J1 + 1] = p[i, J1]
+        p[i, J2 + 1] = p[i, J2 + 2]
     end
 end
 
@@ -215,14 +215,14 @@ function veloeq(p, u, v)
     urhs = zeros(p)
     vrhs = zeros(p)
     # pressure gradient
-    for i in 3:MX+2, j in 3:MY+2
+    for i in 2:MX+2, j in 2:MY+2
         if i<I1 || i>I2 || j<J1 || j>J2
             urhs[i, j] = - (p[i + 1, j] - p[i - 1, j])/(2DX)
             vrhs[i ,j] = - (p[i, j + 1] - p[i, j - 1])/(2DY)
         end
     end
     # viscous term
-    for i in 3:MX+2, j in 3:MY+2
+    for i in 2:MX+2, j in 2:MY+2
         if i<I1 || i>I2 || j<J1 || j>J2
         urhs[i, j] +=
         (u[i + 1,j] - 2u[i, j] + u[i - 1, j]) / (RE * DX^2)
@@ -234,32 +234,32 @@ function veloeq(p, u, v)
     end
     # advection term in x direction
     for j in J1+2:J2
-        u[I1 + 1, j] = 2u[I1, j] - u[I1 - 1, j]
-        u[I2 - 1, j] = 2u[I2, j] - u[I2 + 1, j]
-        v[I1 + 1, j] = 2v[I1, j] - v[I1 - 1, j]
-        v[I2 - 1, j] = 2v[I2, j] - v[I2 + 1, j]
+        u[I1 + 2, j] = 2u[I1 + 1, j] - u[I1, j]
+        u[I2 , j] = 2u[I2 + 1, j] - u[I2 + 2, j]
+        v[I1 + 2, j] = 2v[I1 + 1, j] - v[I1, j]
+        v[I2, j] = 2v[I2 + 1, j] - v[I2, j]
     end
     for i in 3:MX+2, j in 3:MY+2
-        if i<I1-1 || i>I2+1 || j<J1-1 || j>J2+1
+        if i<I1 || i>I2 || j<J1 || j>J2
             urhs[i, j] -= advection_decrement(i, j, u, u, DX)
             vrhs[i, j] -= advection_decrement(i, j, u, v, DX)
         end
     end
     # advection term in y direction
     for i in I1+2:I2
-        u[i, J1 + 1] = 2u[i, J1] - u[i, J1 - 1]
-        u[i, J2 - 1] = 2u[i, J2] - u[i, J2 + 1]
-        v[i, J1 + 1] = 2v[i, J1] - v[i, J1 - 1]
-        v[i, J2 - 1] = 2v[i, J2] - v[i, J2 + 1]
+        u[i, J1 + 2] = 2u[i, J1 + 1] - u[i, J1]
+        u[i, J2] = 2u[i, J2 + 1] - u[i, J2 + 2]
+        v[i, J1 + 2] = 2v[i, J1 + 1] - v[i, J1]
+        v[i, J2] = 2v[i, J2 + 1] - v[i, J2 + 2]
     end
     for i in 3:MX+2, j in 3:MY+2
-        if i<I1-1 || i>I2+1 || j<J1-1 || j>J2+1
+        if i<I1 || i>I2 || j<J1 || j>J2
             urhs[i, j] -= advection_decrement(i, j, v, u, DY)
             vrhs[i,j] -= advection_decrement(i, j, v, v, DY)
         end
     end
     #update
-    for i in 2:MX+2, j in 2:MY+2
+    for i in 3:MX+2, j in 3:MY+2
         if i<I1 || i>I2 || j<J1 || j>J2
             u[i, j] += DT * urhs[i, j]
             v[i, j] += DT * vrhs[i, j]
