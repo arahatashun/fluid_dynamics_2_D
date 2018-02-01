@@ -233,7 +233,8 @@ function veloeq(p, u, v)
         v[I2 - 1, j] = 2v[I2, j] - v[I2 + 1, j]
     end
     for i in 3:MX+2, j in 3:MY+2
-        if i<I1 || i>I2 || j<J1 || j>J2
+        #if i<I1 || i>I2 || j<J1 || j>J2
+        if i<I1-1 || i>I2+1 || j<J1-1 || j>J2+1     #４次精度：：壁内の情報は取れないので壁面の情報を取るような計算範囲を設定
             urhs[i, j] -=
 			u[i, j] * ( -u[i + 2, j] + 8(u[i + 1, j] - u[i - 1, j]) + u[i - 2, j]) / (12DX)
 			+ abs(u[i, j]) * (u[i + 2, j] - 4u[i + 1, j] + 6u[i, j] - 4u[i - 1, j] + u[i - 2, j]) /(4DX)
@@ -251,7 +252,8 @@ function veloeq(p, u, v)
         v[i, J2 - 1] = 2v[i, J2] - v[i, J2 + 1]
     end
     for i in 3:MX+2, j in 3:MY+2
-        if i<I1 || i>I2 || j<J1 || j>J2
+        #if i<I1 || i>I2 || j<J1 || j>J2
+        if i<I1-1 || i>I2+1 || j<J1-1 || j>J2+1   #計算領域が違うnodeha
             urhs[i, j] -=
 			v[i, j] *(-u[i, j + 2] + 8(u[i, j + 1] - u[i, j - 1]) + u[i, j - 2]) / (12DY)
 			+ abs(v[i, j]) * (u[i, j + 2] - 4u[i, j + 1] + 6u[i, j] - 4u[i, j - 1] + u[i, j - 2]) /(4DY)
