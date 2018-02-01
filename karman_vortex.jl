@@ -240,7 +240,7 @@ function veloeq(p, u, v)
         v[I2 - 1, j] = 2v[I2, j] - v[I2 + 1, j]
     end
     for i in 3:MX+2, j in 3:MY+2
-        if i<I1-1 || i>I2+1 || j<J1-1 || j>J2+1 
+        if i<I1-1 || i>I2+1 || j<J1-1 || j>J2+1
             urhs[i, j] -= advection_decrement(i, j, u, u, DX)
             vrhs[i, j] -= advection_decrement(i, j, u, v, DX)
         end
@@ -254,7 +254,7 @@ function veloeq(p, u, v)
     end
     for i in 3:MX+2, j in 3:MY+2
 
-        if i<I1-1 || i>I2+1 || j<J1-1 || j>J2+1 
+        if i<I1-1 || i>I2+1 || j<J1-1 || j>J2+1
             urhs[i, j] -= advection_decrement(i, j, v, u, DY)
             vrhs[i,j] -= advection_decrement(i, j, v, v, DY)
         end
