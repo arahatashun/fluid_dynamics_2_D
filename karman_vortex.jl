@@ -103,15 +103,15 @@ end
 function bcforp(p)
     for j in 1:MY+4
         # inflow condition i = 1
-        p[2, j] = 0.0
+        p[1, j] = 0.0
         # dowmstream condition i = MX
-        p[MX + 3, j] = 0.0
+        p[MX + 4, j] = 0.0
     end
     for i in 1:MX+4
         # bottom condition j = 1
-        p[i, 2] = 0.0
+        p[i, 1] = 0.0
         # bottom condition j = MY
-        p[i, MY + 3] = 0.0
+        p[i, MY + 4] = 0.0
     end
     # wall condition
     # define four point
@@ -139,7 +139,7 @@ function bcforv(u, v)
         v[2, j] = 0.0
         u[1, j] = 1.0
         v[1, j] = 0.0
-        # inflow condition i = MX
+        # downstream condition i = MX
         u[MX + 3, j] = 2u[MX + 2, j] - u[MX + 1, j]
         v[MX + 3, j] = 2v[MX + 2, j] - v[MX + 1, j]
         u[MX + 4, j] = 2u[MX + 3, j] - u[MX + 2, j]
@@ -171,7 +171,7 @@ function poiseq(p, u, v)
     rhs = zeros(p)
     res = 0.0
     itrp = 0
-    for i in 3:MX+2, j in 3:MY+2
+    for i in 2:MX+2, j in 2:MY+2
         if i<I1 || i>I2 || j<J1 || j>J2
         ux = (u[i + 1, j] - u[i - 1, j]) / (2DX)
         uy = (u[i, j + 1] - u[i, j - 1]) / (2DY)
@@ -184,7 +184,7 @@ function poiseq(p, u, v)
     for itr in 1:MAXITP
         res = 0.0
         # relaxation
-        for i in 3:MX+2, j in 3:MY+2
+        for i in 2:MX+2, j in 2:MY+2
             if i<I1 || i>I2 || j<J1 || j>J2
             dp = (p[i + 1, j] + p[i - 1, j]) / (DX ^ 2)
     		   + (p[i, j + 1] + p[i, j - 1]) / (DY ^ 2)
@@ -208,14 +208,14 @@ function veloeq(p, u, v)
     urhs = zeros(p)
     vrhs = zeros(p)
     # pressure gradient
-    for i in 3:MX+2, j in 3:MY+2
+    for i in 2:MX+2, j in 2:MY+2
         if i<I1 || i>I2 || j<J1 || j>J2
             urhs[i, j] = - (p[i + 1, j] - p[i - 1, j])/(2DX)
             vrhs[i ,j] = - (p[i, j + 1] - p[i, j - 1])/(2DY)
         end
     end
     # viscous term
-    for i in 3:MX+2 , j in 3:MY+2
+    for i in 2:MX+2, j in 2:MY+2
         if i<I1 || i>I2 || j<J1 || j>J2
         urhs[i, j] +=
         (u[i + 1,j] - 2u[i, j] + u[i - 1, j]) / (RE * DX^2)
@@ -226,7 +226,7 @@ function veloeq(p, u, v)
         end
     end
     # advection term in x direction
-    for j in J1+2:J2
+    for j in J1+1:J2-1
         u[I1 + 1, j] = 2u[I1, j] - u[I1 - 1, j]
         u[I2 - 1, j] = 2u[I2, j] - u[I2 + 1, j]
         v[I1 + 1, j] = 2v[I1, j] - v[I1 - 1, j]
