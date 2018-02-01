@@ -203,6 +203,12 @@ function poiseq(p, u, v)
     return res, itrp
 end
 
+
+function advection_decrement(i, j, a, b, D)
+    a[i, j] * ( -b[i + 2, j] + 8(b[i + 1, j] - b[i - 1, j]) + b[i - 2, j]) / (12D)
+    + abs(a[i, j]) * (b[i + 2, j] - 4b[i + 1, j] + 6b[i, j] - 4b[i - 1, j] + b[i - 2, j]) /(4D)
+end
+
 # Kawamura scheme
 function veloeq(p, u, v)
     urhs = zeros(p)
@@ -226,7 +232,7 @@ function veloeq(p, u, v)
         end
     end
     # advection term in x direction
-    for j in J1+2:J2-1
+    for j in J1+2:J2
         u[I1 + 1, j] = 2u[I1, j] - u[I1 - 1, j]
         u[I2 - 1, j] = 2u[I2, j] - u[I2 + 1, j]
         v[I1 + 1, j] = 2v[I1, j] - v[I1 - 1, j]
@@ -234,13 +240,8 @@ function veloeq(p, u, v)
     end
     for i in 3:MX+2, j in 3:MY+2
         if i<I1 || i>I2 || j<J1 || j>J2
-            urhs[i, j] -=
-			u[i, j] * ( -u[i + 2, j] + 8(u[i + 1, j] - u[i - 1, j]) + u[i - 2, j]) / (12DX)
-			+ abs(u[i, j]) * (u[i + 2, j] - 4u[i + 1, j] + 6u[i, j] - 4u[i - 1, j] + u[i - 2, j]) /(4DX)
-
-            vrhs[i, j] -=
-			 u[i, j] * ( -v[i + 2, j] + 8(v[i + 1, j] - v[i - 1, j]) + v[i - 2, j]) / (12DX)
-			+ abs(u[i, j]) * (v[i + 2, j] - 4v[i + 1, j] + 6v[i, j] - 4v[i - 1, j] + v[i - 2, j]) /(4DX)
+            urhs[i, j] -= advection_decrement(i, j, u, u, DX)
+            vrhs[i, j] -= advection_decrement(i, j, u, v, DX)
         end
     end
     # advection term in y direction
@@ -252,13 +253,8 @@ function veloeq(p, u, v)
     end
     for i in 3:MX+2, j in 3:MY+2
         if i<I1 || i>I2 || j<J1 || j>J2
-            urhs[i, j] -=
-			v[i, j] *(-u[i, j + 2] + 8(u[i, j + 1] - u[i, j - 1]) + u[i, j - 2]) / (12DY)
-			+ abs(v[i, j]) * (u[i, j + 2] - 4u[i, j + 1] + 6u[i, j] - 4u[i, j - 1] + u[i, j - 2]) /(4DY)
-
-            vrhs[i,j] -=
-			v[i, j] * (-v[i, j + 2] + 8(v[i, j + 1] - v[i, j - 1]) + v[i, j - 2]) / (12DY)
-			+ abs(v[i, j]) * (v[i, j + 2] - 4v[i, j + 1] + 6v[i, j] - 4v[i, j - 1] + v[i, j - 2]) /(4DY)
+            urhs[i, j] -= advection_decrement(i, j, v, u, DY)
+            vrhs[i,j] -= advection_decrement(i, j, v, v, DY)
         end
     end
     #update
