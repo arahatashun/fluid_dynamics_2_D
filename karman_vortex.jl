@@ -120,11 +120,11 @@ function bcforp(p)
     p[I2, J1] = p[I2 + 1, J1 - 1]
     p[I2, J2] = p[I2 + 1, J2 + 1]
     # four sides
-    for j in J1+1:J2-1
+    for j in J1+2:J2
         p[I1, j] = p[I1 - 1, j]
         p[I2, j] = p[I2 + 1, j]
     end
-    for i in I1+1:I2-1
+    for i in I1+2:I2
         p[i, J1] = p[i, J1 - 1]
         p[i, J2] = p[i, J2 + 1]
     end
@@ -150,7 +150,7 @@ function bcforv(u, v)
         u[i, 2] = 2u[i, 3] - u[i, 4]
         v[i, 2] = 2v[i, 3] - v[i, 4]
         u[i, 1] = 2u[i, 2] - u[i, 3]
-        v[i, 1] = 2u[i, 2] - u[i, 3]
+        v[i, 1] = 2v[i, 2] - v[i, 3]
         # bottom condition j = MY
         u[i, MY + 3] = 2u[i, MY + 2] - u[i, MY + 1]
         v[i, MY + 3] = 2v[i, MY + 2] - v[i, MY + 1]
