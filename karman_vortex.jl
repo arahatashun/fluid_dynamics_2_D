@@ -215,14 +215,14 @@ function veloeq(p, u, v)
     urhs = zeros(p)
     vrhs = zeros(p)
     # pressure gradient
-    for i in 2:MX+2, j in 2:MY+2
+    for i in 3:MX+2, j in 3:MY+2
         if i<I1 || i>I2 || j<J1 || j>J2
             urhs[i, j] = - (p[i + 1, j] - p[i - 1, j])/(2DX)
             vrhs[i ,j] = - (p[i, j + 1] - p[i, j - 1])/(2DY)
         end
     end
     # viscous term
-    for i in 2:MX+2, j in 2:MY+2
+    for i in 3:MX+2, j in 3:MY+2
         if i<I1 || i>I2 || j<J1 || j>J2
         urhs[i, j] +=
         (u[i + 1,j] - 2u[i, j] + u[i - 1, j]) / (RE * DX^2)
@@ -237,7 +237,7 @@ function veloeq(p, u, v)
         u[I1 + 2, j] = 2u[I1 + 1, j] - u[I1, j]
         u[I2 , j] = 2u[I2 + 1, j] - u[I2 + 2, j]
         v[I1 + 2, j] = 2v[I1 + 1, j] - v[I1, j]
-        v[I2, j] = 2v[I2 + 1, j] - v[I2, j]
+        v[I2, j] = 2v[I2 + 1, j] - v[I2 + 2, j]
     end
     for i in 3:MX+2, j in 3:MY+2
         if i<I1 || i>I2 || j<J1 || j>J2
