@@ -255,7 +255,7 @@ function veloeq(p, u, v)
     for i in 3:MX+2, j in 3:MY+2
         if i<I1 || i>I2 || j<J1 || j>J2
             urhs[i, j] -= advection_decrement(i, j, v, u, DY)
-            vrhs[i,j] -= advection_decrement(i, j, v, v, DY)
+            vrhs[i, j] -= advection_decrement(i, j, v, v, DY)
         end
     end
     #update
