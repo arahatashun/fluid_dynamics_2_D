@@ -116,9 +116,9 @@ function bcforp(p)
     # wall condition
     # define four point
     p[I1 + 1, J1 + 1] = p[I1, J1]
-    p[I1 + 1, J2 + 1] = p[I1, J2]
-    p[I2 + 1, J1 + 1] = p[I2, J1]
-    p[I2 + 1, J2 + 1] = p[I2, J2]
+    p[I1 + 1, J2 + 1] = p[I1, J2 + 2]
+    p[I2 + 1, J1 + 1] = p[I2 + 2, J1]
+    p[I2 + 1, J2 + 1] = p[I2 + 2, J2 + 2]
     # four sides
     for j in J1+2:J2
         p[I1 + 1, j] = p[I1, j]
