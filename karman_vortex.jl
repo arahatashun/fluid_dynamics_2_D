@@ -2,7 +2,7 @@
  Incompressible Navier-Stokes 2D Flow Solver
  Author: Shun Arahata
 =#
-using PyPlot
+# using PyPlot
 #FLOW CONDITIONS-----------------------------------
 const RE = 70.0 # Reynolds Number
 const CFL = 0.2 #  CFL Number
@@ -35,14 +35,14 @@ const DT = CFL * min(DX, DY)
 #-----------------------------------------------------
 
 # set grid
-function setgrd(X,Y)
+@inbounds function setgrd(X,Y)
     for i in 1:MX, j in 1:MY
         X[i, j] = DX * (i-ICENT)
         Y[i, j] = DY * (j-JCENT)
     end
 end
 
-function slvflw()
+@inbounds function slvflw()
     # print conditions
     println("***  Comp. conditions,")
     println("       CFL = ", CFL)
@@ -100,14 +100,14 @@ function slvflw()
 end
 
 # boundary condition for velocity pressure
-function bcforp(p::Array{Float64, 2})
-    for j in 1:MY
+@inbounds function bcforp(p::Array{Float64, 2})
+    @simd for j in 1:MY
         # inflow condition i = 1
         p[1, j] = 0.0
         # dowmstream condition i = MX
         p[MX, j] = 0.0
     end
-    for i in 1:MX
+    @simd for i in 1:MX
         # bottom condition j = 1
         p[i, 1] = 0.0
         # bottom condition j = MY
@@ -132,7 +132,7 @@ end
 
 
 # boundary condition for velocity
-function bcforv(u, v)
+@inbounds function bcforv(u::Array{Float64, 2}, v::Array{Float64, 2})
     for j in 1:MY
         # inflow condition i =1
         u[1, j] = 1.0
@@ -158,7 +158,7 @@ end
 
 
 # poisson equation
-function poiseq(p, u, v)
+@inbounds function poiseq(p::Array{Float64, 2}, u::Array{Float64, 2}, v::Array{Float64, 2})
     # compute RHS
     rhs = zeros(p)
     res = 0.0
@@ -189,7 +189,6 @@ function poiseq(p, u, v)
         res = sqrt(res/(MX*MY))
         itrp = itr
         if res < ERRORP
-            println(itrp)
             break
         end
     end
@@ -197,7 +196,7 @@ function poiseq(p, u, v)
 end
 
 # Kawamura scheme
-function veloeq(p, u, v)
+@inbounds function veloeq(p::Array{Float64, 2}, u::Array{Float64, 2}, v::Array{Float64, 2})
     urhs = zeros(p)
     vrhs = zeros(p)
     # pressure gradient
@@ -265,10 +264,12 @@ function main()
     setgrd(X,Y)
     # solve flow
     foo =  slvflw()
+    #=
     fig = figure()
     ax = fig[:add_subplot](111)
     img = ax[:imshow](transpose(foo))
     PyPlot.plt[:show]()
+    =#
 end
 
-main()
+@time main()
