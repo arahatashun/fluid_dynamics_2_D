@@ -10,7 +10,7 @@ const CFL = 0.2 #  CFL Number
 # SOR Pamameters
 const OMEGAP = 1.00
 const MAXITP = 100
-const ERRORP = 1.0e-4
+const ERRORP = 0.0001
 
 # No. of Time Steps
 const NLAST = 5000 # Steps
@@ -46,17 +46,17 @@ function slvflw()
     # print conditions
     println("***  Comp. conditions,")
     println("       CFL = ", CFL)
-    println("       dt  = ", DT)
+    println("       DT  = ", DT)
     println("       ",NLAST,"Time Steps to go ...")
     println(" ")
     println(">> 2D Incompressible Flow Solver")
     println("   Re",RE)
     println("   No. of Grid Points", MX, MY)
-    println("   CFL:",CFL,", dt:", DT,", Steps:",NLAST)
+    println("   CFL:",CFL,", DT:", DT,", Steps:",NLAST)
     # initial condition (uniform flow)
     nbegin  = 0
     time = 0.0
-    u = ones(MX + 4, MY + 4)
+    u = ones(MX, MY)
     v = zeros(u)
     p = zeros(u)
     bcforp(p)
@@ -96,70 +96,62 @@ function slvflw()
         end
     end
     # write final results
-    return u
+    return v
 end
 
 # boundary condition for velocity pressure
-function bcforp(p)
-    for j in 1:MY+4
+function bcforp(p::Array{Float64, 2})
+    for j in 1:MY
         # inflow condition i = 1
-        p[2, j] = 0.0
+        p[1, j] = 0.0
         # dowmstream condition i = MX
-        p[MX + 3, j] = 0.0
+        p[MX, j] = 0.0
     end
-    for i in 1:MX+4
+    for i in 1:MX
         # bottom condition j = 1
-        p[i, 2] = 0.0
+        p[i, 1] = 0.0
         # bottom condition j = MY
-        p[i, MY + 3] = 0.0
+        p[i, MY] = 0.0
     end
     # wall condition
     # define four point
-    p[I1 + 1, J1 + 1] = p[I1, J1]
-    p[I1 + 1, J2 + 1] = p[I1, J2 + 2]
-    p[I2 + 1, J1 + 1] = p[I2 + 2, J1]
-    p[I2 + 1, J2 + 1] = p[I2 + 2, J2 + 2]
+    p[I1, J1] = p[I1 - 1, J1 - 1]
+    p[I1, J2] = p[I1 - 1, J2 + 1]
+    p[I2, J1] = p[I2 + 1, J1 - 1]
+    p[I2, J2] = p[I2 + 1, J2 + 1]
     # four sides
-    for j in J1+2:J2
-        p[I1 + 1, j] = p[I1, j]
-        p[I2 + 1, j] = p[I2 + 2, j]
+    for j in J1+1:J2-1
+        p[I1, j] = p[I1 - 1, j]
+        p[I2, j] = p[I2 + 1, j]
     end
-    for i in I1+2:I2
-        p[i, J1 + 1] = p[i, J1]
-        p[i, J2 + 1] = p[i, J2 + 2]
+    for i in I1+1:I2-1
+        p[i, J1] = p[i, J1 - 1]
+        p[i, J2] = p[i, J2 + 1]
     end
 end
 
 
 # boundary condition for velocity
 function bcforv(u, v)
-    for j in 1:MY+4
+    for j in 1:MY
         # inflow condition i =1
-        u[2, j] = 1.0
-        v[2, j] = 0.0
         u[1, j] = 1.0
         v[1, j] = 0.0
         # downstream condition i = MX
-        u[MX + 3, j] = 2u[MX + 2, j] - u[MX + 1, j]
-        v[MX + 3, j] = 2v[MX + 2, j] - v[MX + 1, j]
-        u[MX + 4, j] = 2u[MX + 3, j] - u[MX + 2, j]
-        v[MX + 4, j] = 2v[MX + 3, j] - v[MX + 2, j]
+        u[MX, j] = 2u[MX-1, j] - u[MX-2, j]
+        v[MX, j] = 2v[MX-1, j] - v[MX-2, j]
     end
-    for i in 1:MX+4
+    for i in 1:MX
         # bottom condition j = 1
-        u[i, 2] = 2u[i, 3] - u[i, 4]
-        v[i, 2] = 2v[i, 3] - v[i, 4]
+        # bottom condition j = MY
         u[i, 1] = 2u[i, 2] - u[i, 3]
         v[i, 1] = 2v[i, 2] - v[i, 3]
-        # bottom condition j = MY
-        u[i, MY + 3] = 2u[i, MY + 2] - u[i, MY + 1]
-        v[i, MY + 3] = 2v[i, MY + 2] - v[i, MY + 1]
-        u[i, MY + 4] = 2u[i, MY + 3] - u[i, MY + 2]
-        v[i, MY + 4] = 2v[i, MY + 3] - v[i, MY + 2]
+        u[i, MY] = 2u[i, MY - 1] - u[i, MY - 2]
+        v[i, MY] = 2v[i, MY - 1] - v[i, MY - 2]
     end
     # wall condition
-    for i in I1+1:I2+1, j in J1+1:J2+1
-        u[i ,j] = 0.0
+    for i in I1:I2, j in J1:J2
+        u[i, j] = 0.0
         v[i, j] = 0.0
     end
 end
@@ -171,43 +163,37 @@ function poiseq(p, u, v)
     rhs = zeros(p)
     res = 0.0
     itrp = 0
-    for i in 3:MX+2, j in 3:MY+2
+    for i in 2:MX-1, j in 2:MY-1
         if i<I1 || i>I2 || j<J1 || j>J2
-        ux = (u[i + 1, j] - u[i - 1, j]) / (2DX)
-        uy = (u[i, j + 1] - u[i, j - 1]) / (2DY)
-        vx = (v[i + 1, j] - v[i - 1, j]) / (2DX)
-        vy = (v[i, j + 1] - v[i, j - 1]) / (2DY)
-        rhs[i, j] = (ux + vy) / DT - (ux^2 + 2uy*vx + vy^2)
+            ux = (u[i + 1, j] - u[i - 1, j]) / (2DX)
+            uy = (u[i, j + 1] - u[i, j - 1]) / (2DY)
+            vx = (v[i + 1, j] - v[i - 1, j]) / (2DX)
+            vy = (v[i, j + 1] - v[i, j - 1]) / (2DY)
+            rhs[i, j] = (ux + vy) / DT - (ux^2 + 2uy * vx + vy^2)
         end
     end
     #iterations
     for itr in 0:MAXITP
         res = 0.0
         # relaxation
-        for i in 3:MX+2, j in 3:MY+2
+        for i in 2:MX-1, j in 2:MY-1
             if i<I1 || i>I2 || j<J1 || j>J2
-            dp = (p[i + 1, j] + p[i - 1, j]) / (DX ^ 2)
-    		   + (p[i, j + 1] + p[i, j - 1]) / (DY ^ 2)
-               - rhs[i, j]
-    		dp = dp / (2.0 / (DX ^ 2) + 2.0 / (DY ^ 2)) - p[i, j]
-    		res += dp ^ 2
-    		p[i, j] += OMEGAP * dp
+                dp = (p[i + 1, j] + p[i - 1, j]) / (DX^2) + (p[i, j + 1] + p[i, j - 1]) / (DY^2) -rhs[i, j]
+                dp = dp / (2.0 / (DX^2) + 2.0 /(DY^2)) - p[i, j]
+                res += dp^2
+                p[i, j] += OMEGAP * dp
             end
         end
         # set boundary condition
         bcforp(p)
         res = sqrt(res/(MX*MY))
         itrp = itr
-        res < ERRORP && break
+        if res < ERRORP
+            println(itrp)
+            break
+        end
     end
     return res, itrp
-end
-
-
-function advection_decrement(i, j, a, b, D)
-    decrement = a[i, j] * ( -b[i + 2, j] + 8 * (b[i + 1, j] - b[i - 1, j]) + b[i - 2, j]) / (12D)
-    + abs(a[i, j]) * (b[i + 2, j] - 4b[i + 1, j] + 6b[i, j] - 4b[i - 1, j] + b[i - 2, j]) /(4D)
-    return decrement
 end
 
 # Kawamura scheme
@@ -215,51 +201,55 @@ function veloeq(p, u, v)
     urhs = zeros(p)
     vrhs = zeros(p)
     # pressure gradient
-    for i in 3:MX+2, j in 3:MY+2
+    for i in 2:MX-1, j in 2:MY-1
         if i<I1 || i>I2 || j<J1 || j>J2
             urhs[i, j] = - (p[i + 1, j] - p[i - 1, j])/(2DX)
             vrhs[i ,j] = - (p[i, j + 1] - p[i, j - 1])/(2DY)
         end
     end
     # viscous term
-    for i in 3:MX+2, j in 3:MY+2
+    for i in 2:MX-1, j in 2:MY-1
         if i<I1 || i>I2 || j<J1 || j>J2
-        urhs[i, j] +=
-        (u[i + 1,j] - 2u[i, j] + u[i - 1, j]) / (RE * DX^2)
-        + (u[i, j + 1] - 2u[i, j] + u[i, j - 1]) / (RE * DY^2)
-        vrhs[i, j] +=
-        (v[i + 1, j] - 2v[i, j] + v[i - 1, j]) / (RE * DX^2)
-        + (v[i, j + 1] - 2v[i, j] + v[i, j - 1]) / (RE * DY^2)
+            urhs[i, j] +=
+            (u[i + 1,j] - 2u[i, j] + u[i - 1, j]) / (RE * DX^2)
+            + (u[i, j + 1] - 2u[i, j] + u[i, j - 1]) / (RE * DY^2)
+            vrhs[i, j] +=
+            (v[i + 1, j] - 2v[i, j] + v[i - 1, j]) / (RE * DX^2)
+            + (v[i, j + 1] - 2v[i, j] + v[i, j - 1]) / (RE * DY^2)
         end
     end
     # advection term in x direction
-    for j in J1+2:J2
-        u[I1 + 2, j] = 2u[I1 + 1, j] - u[I1, j]
-        u[I2 , j] = 2u[I2 + 1, j] - u[I2 + 2, j]
-        v[I1 + 2, j] = 2v[I1 + 1, j] - v[I1, j]
-        v[I2, j] = 2v[I2 + 1, j] - v[I2 + 2, j]
+    for j in J1+1:J2-1
+        u[I1+1, j] = 2u[I1, j] - u[I1-1, j]
+        u[I2-1, j] = 2u[I2, j] - u[I2+1, j]
+        v[I1+1, j] = 2v[I1, j] - v[I1-1, j]
+        v[I2-1, j] = 2v[I2, j] - v[I2+1, j]
     end
-    for i in 3:MX+2, j in 3:MY+2
+    for i in 3:MX-2, j in 3:MY-2
         if i<I1 || i>I2 || j<J1 || j>J2
-            urhs[i, j] -= advection_decrement(i, j, u, u, DX)
-            vrhs[i, j] -= advection_decrement(i, j, u, v, DX)
+            urhs[i, j] -= u[i, j] * (-u[i+2, j] + 8.0 * (u[i+1, j] - u[i-1, j]) + u[i-2, j]) / (12.0*DX) +
+            abs(u[i, j]) * (u[i+2, j] - 4.0 * u[i+1, j] + 6.0 * u[i, j] - 4.0 * u[i-1, j] + u[i-2, j]) / (4.0*DX)
+            vrhs[i, j] -= u[i, j] * (-v[i+2, j] + 8.0 * (v[i+1, j] - v[i-1, j]) + v[i-2, j]) / (12.0*DX) +
+            abs(u[i, j]) * (v[i+2, j] - 4.0 * v[i+1, j] + 6.0 * v[i, j] - 4.0 * v[i-1, j] + v[i-2, j]) / (4.0*DX)
         end
     end
     # advection term in y direction
-    for i in I1+2:I2
-        u[i, J1 + 2] = 2u[i, J1 + 1] - u[i, J1]
-        u[i, J2] = 2u[i, J2 + 1] - u[i, J2 + 2]
-        v[i, J1 + 2] = 2v[i, J1 + 1] - v[i, J1]
-        v[i, J2] = 2v[i, J2 + 1] - v[i, J2 + 2]
+    for i in I1+2:I2-1
+        u[i, J1 + 1] = 2u[i, J1] - u[i, J1 - 1]
+        u[i, J2 - 1] = 2u[i, J2] - u[i, J2 + 1]
+        v[i, J1 + 1] = 2v[i, J1] - v[i, J1 - 1]
+        v[i, J2 - 1] = 2v[i, J2] - v[i, J2 + 1]
     end
-    for i in 3:MX+2, j in 3:MY+2
+    for i in 3:MX-2,j in 3:MY-2
         if i<I1 || i>I2 || j<J1 || j>J2
-            urhs[i, j] -= advection_decrement(i, j, v, u, DY)
-            vrhs[i, j] -= advection_decrement(i, j, v, v, DY)
+            urhs[i, j] -= v[i, j] * (-u[i, j+2] + 8.0 * (u[i, j+1] - u[i, j-1]) + u[i, j-2]) / (12.0*DY) +
+            abs(v[i, j]) * (u[i, j+2] - 4.0 * u[i, j+1] + 6.0 * u[i, j] - 4.0 * u[i, j-1] + u[i, j-2]) / (4.0*DY)
+            vrhs[i, j] -= v[i, j] * (-v[i, j+2] + 8.0 * (v[i, j+1] - v[i, j-1]) + v[i, j-2]) / (12.0*DY) +
+            abs(v[i, j]) * (v[i, j+2] - 4.0 * v[i, j+1] + 6.0 * v[i, j] - 4.0 * v[i, j-1] + v[i, j-2]) / (4.0*DY)
         end
     end
     #update
-    for i in 3:MX+2, j in 3:MY+2
+    for i in 2:MX-1, j in 2:MY-1
         if i<I1 || i>I2 || j<J1 || j>J2
             u[i, j] += DT * urhs[i, j]
             v[i, j] += DT * vrhs[i, j]
