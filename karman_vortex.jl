@@ -101,13 +101,13 @@ end
 
 # boundary condition for velocity pressure
 @inbounds function bcforp(p::Array{Float64, 2})
-    @simd for j in 1:MY
+    for j in 1:MY
         # inflow condition i = 1
         p[1, j] = 0.0
         # dowmstream condition i = MX
         p[MX, j] = 0.0
     end
-    @simd for i in 1:MX
+    for i in 1:MX
         # bottom condition j = 1
         p[i, 1] = 0.0
         # bottom condition j = MY
