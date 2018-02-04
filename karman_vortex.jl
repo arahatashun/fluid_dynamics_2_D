@@ -2,9 +2,11 @@
  Incompressible Navier-Stokes 2D Flow Solver
  Author: Shun Arahata
 =#
-# using Plotly
-using PyPlot
-
+using PlotlyJS
+using Plotly
+# using PyPlot
+#using Blink
+#Blink.AtomShell.install()
 #FLOW CONDITIONS-----------------------------------
 const RE = 70.0 # Reynolds Number
 const CFL = 0.2 #  CFL Number
@@ -265,7 +267,7 @@ end
 end
 
 
-function plot(p, u, v)
+function plot_matplot(p, u, v)
     X = zeros(MX)
     Y = zeros(MY)
     setgrd(X, Y)
@@ -286,14 +288,27 @@ function plot(p, u, v)
     xlabel("X")
     ylabel("Y")
     title("Contour Plot of V")
-    PyPlot.plt[:show]()
+    PyPlot.plt[:savefig]("contour_plot.png",dpi=300)
+end
+
+function plot_byplotly(p, u, v)
+
+    X = zeros(MX)
+    Y = zeros(MY)
+    setgrd(X, Y)
+    # trace = contour(x=Y, y=X, z=p, colorscale="Jet", contours_coloring="lines")
+    trace = surface(x=Y, y=X, z=p, colorscale="Jet", contours_coloring="lines")
+    layout = Layout(title="P in a Contour Plot")
+    my_plot = PlotlyJS.Plot(trace,layout)
+    remote_plot = post(my_plot)
 end
 
 
 function main()
     # solve flow
     p, u, v =  slvflw()
-    plot(p, u, v)
+    # plot_matplot(p, u, v)
+    plot_byplotly(p, u, v)
 end
 
 @time main()
