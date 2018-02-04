@@ -11,7 +11,7 @@ const CFL = 0.2 #  CFL Number
 
 # SOR Pamameters
 const OMEGAP = 1.00
-const MAXITP = 100
+const MAXITP = 10000
 const ERRORP = 0.0001
 
 # No. of Time Steps
@@ -93,7 +93,7 @@ function slvflw()
             cptop = (2p[i, J2] + 2p[i+1, J2])/2
             cl += (cpbtm - cptop)*DX
         end
-        heatmap(X, Y, transpose(v),clim = (-0.8, 0.8), aspect_ratio=1, c=:viridis)
+        heatmap(X, Y, transpose(v),clim = (-0.8, 0.8), aspect_ratio=1, c=:viridis, title = "$(time) sec" )
         # monitor by NLP steps
         if n % NLP == 0
             cp1 = 2p[I2 + I2 - I1, J1]
@@ -103,7 +103,7 @@ function slvflw()
     end every 100
     gif(anim, "karman.gif", fps = 10)
     # write final results
-    return v
+    return p
 end
 
 # boundary condition for velocity pressure
@@ -145,16 +145,16 @@ end
         u[1, j] = 1.0
         v[1, j] = 0.0
         # downstream condition i = MX
-        u[MX, j] = 2u[MX-1, j] - u[MX-2, j]
-        v[MX, j] = 2v[MX-1, j] - v[MX-2, j]
+        u[MX, j] = 2.0 * u[MX-1, j] - u[MX-2, j]
+        v[MX, j] = 2.0 * v[MX-1, j] - v[MX-2, j]
     end
     for i in 1:MX
         # bottom condition j = 1
         # bottom condition j = MY
-        u[i, 1] = 2u[i, 2] - u[i, 3]
-        v[i, 1] = 2v[i, 2] - v[i, 3]
-        u[i, MY] = 2u[i, MY - 1] - u[i, MY - 2]
-        v[i, MY] = 2v[i, MY - 1] - v[i, MY - 2]
+        u[i, 1] = 2.0 * u[i, 2] - u[i, 3]
+        v[i, 1] = 2.0 * v[i, 2] - v[i, 3]
+        u[i, MY] = 2.0 * u[i, MY - 1] - u[i, MY - 2]
+        v[i, MY] = 2.0 * v[i, MY - 1] - v[i, MY - 2]
     end
     # wall condition
     for i in I1:I2, j in J1:J2
@@ -226,10 +226,10 @@ end
     end
     # advection term in x direction
     for j in J1+1:J2-1
-        u[I1+1, j] = 2u[I1, j] - u[I1-1, j]
-        u[I2-1, j] = 2u[I2, j] - u[I2+1, j]
-        v[I1+1, j] = 2v[I1, j] - v[I1-1, j]
-        v[I2-1, j] = 2v[I2, j] - v[I2+1, j]
+        u[I1+1, j] = 2.0 * u[I1, j] - u[I1-1, j]
+        u[I2-1, j] = 2.0 * u[I2, j] - u[I2+1, j]
+        v[I1+1, j] = 2.0 * v[I1, j] - v[I1-1, j]
+        v[I2-1, j] = 2.0 * v[I2, j] - v[I2+1, j]
     end
     for i in 3:MX-2, j in 3:MY-2
         if i<I1 || i>I2 || j<J1 || j>J2
@@ -241,10 +241,10 @@ end
     end
     # advection term in y direction
     for i in I1+2:I2-1
-        u[i, J1 + 1] = 2u[i, J1] - u[i, J1 - 1]
-        u[i, J2 - 1] = 2u[i, J2] - u[i, J2 + 1]
-        v[i, J1 + 1] = 2v[i, J1] - v[i, J1 - 1]
-        v[i, J2 - 1] = 2v[i, J2] - v[i, J2 + 1]
+        u[i, J1 + 1] = 2.0 * u[i, J1] - u[i, J1 - 1]
+        u[i, J2 - 1] = 2.0 * u[i, J2] - u[i, J2 + 1]
+        v[i, J1 + 1] = 2.0 * v[i, J1] - v[i, J1 - 1]
+        v[i, J2 - 1] = 2.0 * v[i, J2] - v[i, J2 + 1]
     end
     for i in 3:MX-2,j in 3:MY-2
         if i<I1 || i>I2 || j<J1 || j>J2
@@ -264,14 +264,15 @@ end
 end
 
 function main()
+    X = zeros(MX)
+    Y = zeros(MY)
+    setgrd(X, Y)
     # solve flow
     foo =  slvflw()
-    #=
     fig = figure()
     ax = fig[:add_subplot](111)
     img = ax[:imshow](transpose(foo))
     PyPlot.plt[:show]()
-    =#
 end
 
 @time main()
