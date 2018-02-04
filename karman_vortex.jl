@@ -2,7 +2,9 @@
  Incompressible Navier-Stokes 2D Flow Solver
  Author: Shun Arahata
 =#
-# using PyPlot
+using Plots
+
+
 #FLOW CONDITIONS-----------------------------------
 const RE = 70.0 # Reynolds Number
 const CFL = 0.2 #  CFL Number
@@ -37,12 +39,12 @@ const DT = CFL * min(DX, DY)
 # set grid
 @inbounds function setgrd(X,Y)
     for i in 1:MX, j in 1:MY
-        X[i, j] = DX * (i-ICENT)
-        Y[i, j] = DY * (j-JCENT)
+        X[i] = DX * (i-ICENT)
+        Y[j] = DY * (j-JCENT)
     end
 end
 
-@inbounds function slvflw()
+function slvflw()
     # print conditions
     println("***  Comp. conditions,")
     println("       CFL = ", CFL)
@@ -59,13 +61,16 @@ end
     u = ones(MX, MY)
     v = zeros(u)
     p = zeros(u)
+    X = zeros(MX)
+    Y = zeros(MY)
+    setgrd(X, Y)
     bcforp(p)
     bcforv(u, v)
     # time marching
     println("Step /Res(p) at itr. /CD/CL/Cp1/Cp2")
     println("   Step Res(p) CD CL Cp1 Cp2")
     nsteps = 0
-    for n in 1:NLAST
+    anim = @animate for n in 1:NLAST
         nstep = n + nbegin
         time += DT
         # solve poisson for p
@@ -88,13 +93,15 @@ end
             cptop = (2p[i, J2] + 2p[i+1, J2])/2
             cl += (cpbtm - cptop)*DX
         end
+        heatmap(X, Y, transpose(v),clim = (-0.8, 0.8), aspect_ratio=1, c=:viridis)
         # monitor by NLP steps
         if n % NLP == 0
             cp1 = 2p[I2 + I2 - I1, J1]
             cp2 = 2p[I2 + I2 - I1, J2]
             println("   ",nstep,",", resp,",", itrp,"," ,cd,"," ,cl,"," ,cp1,"," ,cp2)
         end
-    end
+    end every 100
+    gif(anim, "karman.gif", fps = 10)
     # write final results
     return v
 end
@@ -257,11 +264,6 @@ end
 end
 
 function main()
-    # make Array
-    X = zeros(MX, MY)
-    Y = zeros(MX, MY)
-    # set grd
-    setgrd(X,Y)
     # solve flow
     foo =  slvflw()
     #=
