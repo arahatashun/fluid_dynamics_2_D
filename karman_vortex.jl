@@ -2,8 +2,8 @@
  Incompressible Navier-Stokes 2D Flow Solver
  Author: Shun Arahata
 =#
-using Plots
-
+# using Plotly
+using PyPlot
 
 #FLOW CONDITIONS-----------------------------------
 const RE = 70.0 # Reynolds Number
@@ -70,7 +70,8 @@ function slvflw()
     println("Step /Res(p) at itr. /CD/CL/Cp1/Cp2")
     println("   Step Res(p) CD CL Cp1 Cp2")
     nsteps = 0
-    anim = @animate for n in 1:NLAST
+    #anim = @animate
+    for n in 1:NLAST
         nstep = n + nbegin
         time += DT
         # solve poisson for p
@@ -93,17 +94,17 @@ function slvflw()
             cptop = (2p[i, J2] + 2p[i+1, J2])/2
             cl += (cpbtm - cptop)*DX
         end
-        heatmap(X, Y, transpose(v),clim = (-0.8, 0.8), aspect_ratio=1, c=:viridis, title = "$(time) sec" )
+        # heatmap(X, Y, transpose(v),clim = (-0.8, 0.8), aspect_ratio=1, c=:viridis, title = "$(time) sec" )
         # monitor by NLP steps
         if n % NLP == 0
             cp1 = 2p[I2 + I2 - I1, J1]
             cp2 = 2p[I2 + I2 - I1, J2]
             println("   ",nstep,",", resp,",", itrp,"," ,cd,"," ,cl,"," ,cp1,"," ,cp2)
         end
-    end every 100
-    gif(anim, "karman.gif", fps = 10)
+    end #every 100
+    # gif(anim, "karman.gif", fps = 10)
     # write final results
-    return p
+    return p, u, v
 end
 
 # boundary condition for velocity pressure
@@ -263,16 +264,36 @@ end
     end
 end
 
-function main()
+
+function plot(p, u, v)
     X = zeros(MX)
     Y = zeros(MY)
     setgrd(X, Y)
-    # solve flow
-    foo =  slvflw()
     fig = figure()
-    ax = fig[:add_subplot](111)
-    img = ax[:imshow](transpose(foo))
+    ax = fig[:add_subplot](311)
+    cp = ax[:contour](X, Y, transpose(p), 10)
+    ax[:clabel](cp, inline=1, fontsize=10)
+    ylabel("Y")
+    title("Contour Plot of Pressure")
+    ax = fig[:add_subplot](312)
+    cp = ax[:contour](X, Y, transpose(u), 10)
+    ax[:clabel](cp, inline=1, fontsize=10)
+    ylabel("Y")
+    title("Contour Plot of U")
+    ax = fig[:add_subplot](313)
+    cp = ax[:contour](X, Y, transpose(v), 10)
+    ax[:clabel](cp, inline=1, fontsize=10)
+    xlabel("X")
+    ylabel("Y")
+    title("Contour Plot of V")
     PyPlot.plt[:show]()
+end
+
+
+function main()
+    # solve flow
+    p, u, v =  slvflw()
+    plot(p, u, v)
 end
 
 @time main()
