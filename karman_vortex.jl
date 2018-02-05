@@ -7,7 +7,8 @@
 using PyPlot
 # using Plots
 #FLOW CONDITIONS-----------------------------------
-const RE = int(input("Reynolds Number")) # Reynolds Number
+print("Input an Reynolds Number: ")
+const RE =  parse(Int64, readline())# Reynolds Number
 const CFL = 0.2 #  CFL Number
 
 # SOR Pamameters
