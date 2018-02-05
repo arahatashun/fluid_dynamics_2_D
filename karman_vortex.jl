@@ -13,12 +13,11 @@ const CFL = 0.2 #  CFL Number
 
 # SOR Pamameters
 const OMEGAP = 1.00
-# const MAXITP = 1000
-const MAXITP = 500
+const MAXITP = 100000
 const ERRORP = 0.0001
 
 # No. of Time Steps
-const NLAST = 15000 # Steps
+const NLAST = 10000 # Steps
 const NLP = 10
 
 # set x-grid parameters
