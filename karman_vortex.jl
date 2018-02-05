@@ -7,7 +7,7 @@
 using PyPlot
 # using Plots
 #FLOW CONDITIONS-----------------------------------
-const RE = 70.0 # Reynolds Number
+const RE = int(input("Reynolds Number")) # Reynolds Number
 const CFL = 0.2 #  CFL Number
 
 # SOR Pamameters
@@ -329,14 +329,15 @@ end
 function plot_coefficient(cd, cl, cp1, cp2)
     fig = figure()
     ax = fig[:add_subplot](111)
-    time_list = linspace(DT,DT * NLAST, NLAST-1)
-    ax[:plot](time_list, cd[2:NLAST], label="CD")
-    ax[:plot](time_list, cl[2:NLAST], label="CL")
-    ax[:plot](time_list, cp1[2:NLAST], label="Cp1")
-    ax[:plot](time_list, cp2[2:NLAST], label="Cp2")
+    time_list = linspace(NLAST÷2*DT,DT * NLAST, NLAST÷2+1)
+    ax[:plot](time_list, cd[NLAST÷2:NLAST], label="CD")
+    ax[:plot](time_list, cl[NLAST÷2:NLAST], label="CL")
+    ax[:plot](time_list, cp1[NLAST÷2:NLAST], label="Cp1")
+    ax[:plot](time_list, cp2[NLAST÷2:NLAST], label="Cp2")
     xlabel("time")
     title("Re = $(RE)")
     legend(loc = 1)
+    PyPlot.plt[:savefig]("$(RE).pgf")
     PyPlot.plt[:show]()
 end
 
