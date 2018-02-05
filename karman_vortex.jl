@@ -8,7 +8,7 @@ using PyPlot
 # using Plots
 #FLOW CONDITIONS-----------------------------------
 print("Input an Reynolds Number: ")
-const RE =  parse(Int64, readline())# Reynolds Number
+const RE =  parse(Float64, readline())# Reynolds Number
 const CFL = 0.2 #  CFL Number
 
 # SOR Pamameters
@@ -338,7 +338,7 @@ function plot_coefficient(cd, cl, cp1, cp2)
     xlabel("time")
     title("Re = $(RE)")
     legend(loc = 1)
-    PyPlot.plt[:savefig]("$(RE).pgf")
+    PyPlot.plt[:savefig]("$(trunc(Int,RE)).pgf")
     PyPlot.plt[:show]()
 end
 
