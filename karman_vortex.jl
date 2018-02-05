@@ -2,22 +2,22 @@
  Incompressible Navier-Stokes 2D Flow Solver
  Author: Shun Arahata
 =#
-using PlotlyJS
-using Plotly
-# using PyPlot
-#using Blink
-#Blink.AtomShell.install()
+# using PlotlyJS
+# using Plotly
+using PyPlot
+# using Plots
 #FLOW CONDITIONS-----------------------------------
 const RE = 70.0 # Reynolds Number
 const CFL = 0.2 #  CFL Number
 
 # SOR Pamameters
 const OMEGAP = 1.00
-const MAXITP = 10000
+# const MAXITP = 1000
+const MAXITP = 500
 const ERRORP = 0.0001
 
 # No. of Time Steps
-const NLAST = 5000 # Steps
+const NLAST = 15000 # Steps
 const NLP = 10
 
 # set x-grid parameters
@@ -37,7 +37,6 @@ const JCENT = (J1 + J2) / 2
 # set time step size
 const DT = CFL * min(DX, DY)
 #-----------------------------------------------------
-
 # set grid
 @inbounds function setgrd(X,Y)
     for i in 1:MX, j in 1:MY
@@ -72,6 +71,10 @@ function slvflw()
     println("Step /Res(p) at itr. /CD/CL/Cp1/Cp2")
     println("   Step Res(p) CD CL Cp1 Cp2")
     nsteps = 0
+    cd_list = zeros(NLAST, 1)
+    cl_list = zeros(cd_list)
+    cp1_list = zeros(cd_list)
+    cp2_list = zeros(cd_list)
     #anim = @animate
     for n in 1:NLAST
         nstep = n + nbegin
@@ -90,23 +93,28 @@ function slvflw()
             cpback = (2p[I2, j] + 2p[I2, j+1])/2
             cd += (cpfore - cpback)*DY
         end
+        cd_list[n] = cd
         cl = 0.0
         for i in I1+1:I2
             cpbtm = (2p[i, J1] + 2p[i+1, J1])/2
             cptop = (2p[i, J2] + 2p[i+1, J2])/2
             cl += (cpbtm - cptop)*DX
         end
-        # heatmap(X, Y, transpose(v),clim = (-0.8, 0.8), aspect_ratio=1, c=:viridis, title = "$(time) sec" )
+        cl_list[n] = cl
+        # heatmap(X, Y, transpose(v),clim = (-1, 1), aspect_ratio=1, c=:viridis, title = "$(time) sec" )
         # monitor by NLP steps
+        cp1 = 2p[I2 + I2 - I1, J1]
+        cp2 = 2p[I2 + I2 - I1, J2]
         if n % NLP == 0
-            cp1 = 2p[I2 + I2 - I1, J1]
-            cp2 = 2p[I2 + I2 - I1, J2]
             println("   ",nstep,",", resp,",", itrp,"," ,cd,"," ,cl,"," ,cp1,"," ,cp2)
         end
-    end #every 100
-    # gif(anim, "karman.gif", fps = 10)
+        cp1_list[n] = cp1
+        cp2_list[n] = cp2
+    end # every 100
+    # gif(anim, "karman_Re=$(RE)gif", fps = 10)
     # write final results
-    return p, u, v
+    # return p, u, v
+    return cd_list, cl_list, cp1_list, cp2_list
 end
 
 # boundary condition for velocity pressure
@@ -267,7 +275,7 @@ end
 end
 
 
-function plot_matplot(p, u, v)
+function plot_matplot_all(p, u, v)
     X = zeros(MX)
     Y = zeros(MY)
     setgrd(X, Y)
@@ -304,11 +312,41 @@ function plot_byplotly(p, u, v)
 end
 
 
+function plot_matplot(p, u, v)
+    X = zeros(MX)
+    Y = zeros(MY)
+    setgrd(X, Y)
+    fig = figure()
+    ax = fig[:add_subplot](111)
+    cp = ax[:contour](X, Y, transpose(p), 10)
+    ax[:clabel](cp, inline=1, fontsize=10)
+    ylabel("Y")
+    xlabel("X")
+    title("Contour Plot of Pressure $(DT*NLAST) sec")
+    PyPlot.plt[:savefig]("contour_plot.pgf")
+end
+
+function plot_coefficient(cd, cl, cp1, cp2)
+    fig = figure()
+    ax = fig[:add_subplot](111)
+    time_list = linspace(DT,DT * NLAST, NLAST-1)
+    ax[:plot](time_list, cd[2:NLAST], label="CD")
+    ax[:plot](time_list, cl[2:NLAST], label="CL")
+    ax[:plot](time_list, cp1[2:NLAST], label="Cp1")
+    ax[:plot](time_list, cp2[2:NLAST], label="Cp2")
+    xlabel("time")
+    title("Re = $(RE)")
+    legend(loc = 1)
+    PyPlot.plt[:show]()
+end
+
 function main()
     # solve flow
-    p, u, v =  slvflw()
+    # p, u, v =  slvflw()
     # plot_matplot(p, u, v)
-    plot_byplotly(p, u, v)
+    # plot_byplotly(p, u, v)
+    cd, cl, cp1, cp2  = slvflw()
+    plot_coefficient(cd, cl, cp1, cp2)
 end
 
 @time main()
