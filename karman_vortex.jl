@@ -13,12 +13,12 @@ const CFL = 0.2 #  CFL Number
 
 # SOR Pamameters
 const OMEGAP = 1.00
-const MAXITP = 100000
+const MAXITP = 10000
 const ERRORP = 0.0001
 
 # No. of Time Steps
-const NLAST = 10000 # Steps
-const NLP = 10
+const NLAST = 6000 # Steps
+const NLP = 100
 
 # set x-grid parameters
 const MX = 401 # grid number of x
@@ -191,6 +191,7 @@ end
         end
     end
     #iterations
+    relaxation_flag = true
     for itr in 0:MAXITP
         res = 0.0
         # relaxation
@@ -207,9 +208,11 @@ end
         res = sqrt(res/(MX*MY))
         itrp = itr
         if res < ERRORP
+            relaxation_flag = false
             break
         end
     end
+    relaxation_flag&&println("relaxation error")
     return res, itrp
 end
 
@@ -329,15 +332,34 @@ end
 function plot_coefficient(cd, cl, cp1, cp2)
     fig = figure()
     ax = fig[:add_subplot](111)
-    time_list = linspace(NLAST÷2*DT,DT * NLAST, NLAST÷2+1)
-    ax[:plot](time_list, cd[NLAST÷2:NLAST], label="CD")
-    ax[:plot](time_list, cl[NLAST÷2:NLAST], label="CL")
-    ax[:plot](time_list, cp1[NLAST÷2:NLAST], label="Cp1")
-    ax[:plot](time_list, cp2[NLAST÷2:NLAST], label="Cp2")
+    start_index = Int(NLAST*3/4)
+    time_list = linspace(start_index*DT,DT * NLAST, NLAST - start_index+1)
+    ax[:plot](time_list, cd[start_index:NLAST], label="CD")
+    ax[:plot](time_list, cl[start_index:NLAST], label="CL")
+    ax[:plot](time_list, cp1[start_index:NLAST], label="Cp1")
+    ax[:plot](time_list, cp2[start_index:NLAST], label="Cp2")
     xlabel("time")
-    title("Re = $(RE)")
+    cd_average = sum(cd)/length(cd)
+    title("Re = $(RE), CD = $(cd_average) ")
     legend(loc = 1)
     PyPlot.plt[:savefig]("$(trunc(Int,RE)).pgf")
+    PyPlot.plt[:show]()
+    # plot_fft(cl[start_index:NLAST])
+end
+
+function plot_fft(signal)
+    am = fft(signal)
+    fig = figure()
+    ax = fig[:add_subplot](111)
+    plotnum = div(1.0,DT)
+    freq = linspace(0, 1, plotnum)
+    am = abs(am)[1:plotnum]
+    ax[:plot](freq, am)
+    main_freq = freq[indmax(am)]
+    xlabel("Hz")
+    ylabel("Amptitude")
+    title("Re = $(RE), $(main_freq)Hz")
+    PyPlot.plt[:savefig]("fft_$(trunc(Int,RE)).pgf")
     PyPlot.plt[:show]()
 end
 
